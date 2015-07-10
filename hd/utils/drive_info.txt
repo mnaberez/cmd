@@ -1,0 +1,69 @@
+;drive_info.prg ==1c01==
+    8 printchr$(14)
+    9 input"{clr} HD device number";dv:ifdv<8ordv>30then9
+   10 sd=0:sl=0:sb=12288
+   11 print"{clr}":print:gosub9000
+   12 gosub800
+   20 sc$="25 00 00 00 00 00 00 00 00 00"
+   30 gosub1000
+   40 ifss<>0then4000
+   50 open15,dv,15,"m-r"+chr$(bl+1)+chr$(bh)+chr$(3)
+   60 get#15,a$,b$,c$:ch=asc(a$+chr$(0)):cm=asc(b$+chr$(0)):cl=asc(c$+chr$(0))
+   70 close15:cb=(ch*65536+cm*256+cl)*512
+   71 :
+   72 print:cb=cb/10000:wp=int(cb):dp=cb-wp:ifdp>=.5thenwp=wp+1
+   73 cb=wp/100
+   75 printtab(3)"Capacity      :"cb"Megabytes"
+   76 :
+   90 :
+  100 sc$="1a 00 20 00 20 00"
+  110 gosub1000
+  120 ifss<>0thensn$="N/A":goto150
+  130 open15,dv,15,"m-r"+chr$(bl+3)+chr$(bh)+chr$(1):get#15,a$:dl=asc(a$)
+  131 print#15,"m-r"+chr$(bl+3+dl+2)+chr$(bh)+chr$(1):get#15,a$:pl=asc(a$)
+  132 print#15,"m-r"+chr$(bl+3+dl+3)+chr$(bh)+chr$(pl)
+  134 fori=1topl:get#15,a$:sn$=sn$+a$:next
+  140 close15
+  150 print:printtab(3)"Serial number : "sn$:print"{down}{down}{down}"
+  200 :
+  210 :
+  220 end
+  800 sc$="12 00 00 00 20 00"
+  810 gosub1000
+  820 ifss<>0then4000
+  830 open15,dv,15,"m-r"+chr$(bl)+chr$(bh)+chr$(32)
+  831 fori=0to7:get#15,a$:next
+  832 fori=ito15:get#15,a$:mn$=mn$+a$:next
+  834 fori=ito31:get#15,a$:pi$=pi$+a$:next
+  835 ifmn$="conner  "thenmn$="Conner"
+  836 ifleft$(pi$,2)="cp"thenpi$="CP"+mid$(pi$,3,4)
+  840 close15
+  850 print:printtab(3)"Manufacturer  : "mn$
+  860 print:printtab(3)"Model         : "pi$
+  870 return
+  999 :
+ 1000 gosub3000
+ 1002 bh=int(sb/256):bl=sb-bh*256
+ 1004 gosub1020:ifss<>0thengosub1020
+ 1006 return
+ 1020 open15,dv,15,"s-c"+chr$(sd)+chr$(bl)+chr$(bh)+ss$
+ 1030 get#15,sa$,sb$:ss=asc(sa$+chr$(0))
+ 1040 close15:return
+ 1098 :
+ 1099 :
+ 3000 ss$=""
+ 3004 for i=1 to len(sc$) step3
+ 3010 hv%=asc(mid$(sc$,i,1))-55:ifhv%<10thenhv%=hv%+7:hv%=hv%*16
+ 3020 hl%=asc(mid$(sc$,i+1,1))-55:ifhl%<10thenhl%=hl%+7
+ 3030 ss$=ss$+chr$(hv%+hl%)
+ 3040 next:return
+ 3998 :
+ 3999 :
+ 4000 printtab(3)"scsi error"ss:print"{down}{down}{down}{down}{down}{down}{down}{down}{down}{down}{down}{down}":end
+ 5999 :
+ 7999 :
+ 9000 print" {CBM-A} HD Drive Mechanism ";:fori=1to16:printchr$(96);:next:print"{CBM-S}"
+ 9010 fori=1to11:print" "chr$(125)"                                    "chr$(125)
+ 9020 next
+ 9030 print" {CBM-Z}";:fori=1to36:printchr$(96);:next:print"{CBM-X}"
+ 9040 print"{home}{down}{down}{down}":return

@@ -1,0 +1,288 @@
+;add_drive.prg ==1c01==
+ 1000 rem add drive v2.00 (c)1989 c.m.d.
+ 1010 vn$="v2.00"
+ 1020 f=abs(peek(65533)=255)
+ 1030 poke53280,0:poke53281,0
+ 1040 gosub 3420
+ 1050 :
+ 1060 dimdl%(56)
+ 1070 :
+ 1080 iff=0thenha=52736
+ 1090 iff=1thenha=dec("1900"):bank15
+ 1100 td=30
+ 1110 :
+ 1120 open15,td,15,"m-r"+chr$(160)+chr$(254)+chr$(6)
+ 1130 fori=1to6:get#15,a$:id$=id$+a$:next
+ 1140 ifid$<>"cmd hd"then print"hd not present":close15:end
+ 1150 :
+ 1160 input"{clr}{down}add or remove drive (a/r)";ar$
+ 1170 ifar$<>"a"andar$<>"r"then1160
+ 1180 :
+ 1190 lb=00:hb=ha/256:tl=00:th=03:print:print
+ 1200 bl=5:bh=0:bc=1:print"reading hardware block";:gosub3040
+ 1210 :
+ 1220 ifar$="a"thengosub1250:goto2160
+ 1230 ifar$="r"then1430
+ 1240 :
+ 1250 print"{clr}currently recognized scsi drives":print
+ 1260 print" dev lun   dev lun   dev lun   dev lun"
+ 1270 print" {CBM-T}{CBM-T}{CBM-T} {CBM-T}{CBM-T}{CBM-T}   {CBM-T}{CBM-T}{CBM-T} {CBM-T}{CBM-T}{CBM-T}   {CBM-T}{CBM-T}{CBM-T} {CBM-T}{CBM-T}{CBM-T}   {CBM-T}{CBM-T}{CBM-T} {CBM-T}{CBM-T}{CBM-T}"
+ 1280 :
+ 1290 t1=1:t2=5
+ 1300 forc=0to3
+ 1310 :print"{home}{down}{down}{down}{down}";
+ 1320 :for i=c*14 to c*14+13
+ 1330 : dl=peek(ha+i):if dl=255 then print      tab(t1+c*10)" -   -":goto1370
+ 1340 : d=(dl and 240)/16
+ 1350 : l=(dl and 15)
+ 1360 : printtab(t1+c*10)d;tab(t2+c*10)l
+ 1370 : dl%(i)=dl
+ 1380 :next i
+ 1390 next c
+ 1400 return
+ 1410 :
+ 1420 :
+ 1430 gosub3620
+ 1440 print"{clr}currently recognized scsi drives":print
+ 1450 print" dev lun   dev lun   dev lun   dev lun"
+ 1460 print" {CBM-T}{CBM-T}{CBM-T} {CBM-T}{CBM-T}{CBM-T}   {CBM-T}{CBM-T}{CBM-T} {CBM-T}{CBM-T}{CBM-T}   {CBM-T}{CBM-T}{CBM-T} {CBM-T}{CBM-T}{CBM-T}   {CBM-T}{CBM-T}{CBM-T} {CBM-T}{CBM-T}{CBM-T}"
+ 1470 :
+ 1480 dim d%(56),l%(56)
+ 1490 t1=1:t2=5:ct=1:fori=1to56:d%(i)=255:l%(i)=255:next
+ 1500 forc=0to3
+ 1510 :print"{home}{down}{down}{down}{down}";
+ 1520 :for i=c*14 to c*14+13
+ 1530 : dl=peek(ha+i):if dl=255 then print      tab(t1+c*10)" -   -":goto1570
+ 1540 : d=(dl and 240)/16
+ 1550 : l=(dl and 15):d%(ct)=d:l%(ct)=l:ct=ct+1
+ 1560 : printtab(t1+c*10)d;tab(t2+c*10)l
+ 1570 : dl%(i)=dl
+ 1580 :next i
+ 1590 next c
+ 1600 :
+ 1610 p=1
+ 1620 print"{down}  use the cursor keys to select drive  "
+ 1630 print"  to remove - press return to continue "
+ 1640 xp$="{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}":yp$="{down}{down}{down}{down}{down}{down}{down}{down}{down}{down}{down}{down}{down}{down}"
+ 1650 xp=int((p-1)/14):yp=p-(xp*14):xp=xp*10+8
+ 1660 print"{home}{down}{down}{down}";
+ 1670 printleft$(xp$,xp);
+ 1680 printleft$(yp$,yp);
+ 1690 print"_";
+ 1700 getk$:ifk$<>chr$(13)andk$<>"{down}"andk$<>"{up}"andk$<>"{left}"andk$<>"{rght}"then1700
+ 1710 ifk$="{down}"andp<56thenifd%(p+1)<>255thenp=p+1
+ 1720 ifk$="{up}"andp>1thenifd%(p-1)<>255thenp=p-1
+ 1730 ifk$="{rght}"andp<43thenifd%(p+14)<>255thenp=p+14
+ 1740 ifk$="{left}"andp>14thenifd%(p-14)<>255thenp=p-14
+ 1750 ifk$=chr$(13)thend=d%(p):l=l%(p):goto1790
+ 1760 print"{left} ";:rem d & l
+ 1770 goto1650
+ 1780 :
+ 1790 print"{home}{down}{down}{down}{down}{down}{down}{down}{down}{down}{down}{down}{down}{down}{down}{down}{down}{down}{down}{down}";
+ 1800 print"                                       "
+ 1810 print"                                       "
+ 1820 print"{up}{up}";
+ 1830 :
+ 1840 ifp<>1then1890
+ 1850 ifp= 1thenprint"  sorry... the system drive"
+ 1860 print "  cannot be removed.":close15:end
+ 1870 :
+ 1880 :
+ 1890 print"  remove dev."d" lun."l
+ 1900 print"  are you sure (y/n)?
+ 1910 geta$:ifa$=""then1910
+ 1920 ifa$<>"y"thenclose15:end
+ 1930 :
+ 1940 hi=p-1:dl=ha:oh=ha+56:om=oh+56:ol=om+56
+ 1950 a=peek(oh+hi+1)*65536+peek(om+hi+1)*256+peek(ol+hi+1)
+ 1960 sr=a-(peek(oh+hi)*65536+peek(om+hi)*256+peek(ol+hi))
+ 1970 :
+ 1980 pokedl+hi,peek(dl+hi+1)
+ 1990 ms=peek(oh+hi+2)*65536+peek(om+hi+2)*256+peek(ol+hi+2)
+ 2000 ifpeek(dl+hi)=255thensr=0
+ 2010 ns=ms-sr
+ 2020 nh=int(ns/65536)
+ 2030 nm=int((ns-nh*65536)/256)
+ 2040 nl=ns-(nh*65536+nm*256)
+ 2050 pokeoh+hi+1,nh
+ 2060 pokeom+hi+1,nm
+ 2070 pokeol+hi+1,nl
+ 2080 hi=hi+1
+ 2090 ifpeek(dl+hi)<>255then1980
+ 2100 :
+ 2110 print"{up}{up}  writing hardware block      "
+ 2120 print"                             "
+ 2130 gosub2900
+ 2140 gosub1290:print"{down}  drive has been removed."
+ 2150 close15:end
+ 2160 print
+ 2170 print"scanning for new scsi drive:   dev lun"
+ 2180 print"                               {CBM-T}{CBM-T}{CBM-T} {CBM-T}{CBM-T}{CBM-T}":print
+ 2190 gosub3130
+ 2200 d=0:l=0
+ 2210 :
+ 2220 : dv=td:sd=d:sl=l:sb=16384
+ 2230 : sc$="00 00 00 00 00 00"
+ 2240 : gosub3240
+ 2250 : print"{up}"tab(31)d tab(35)"  "
+ 2260 : if ss=133thenl=7:goto2360
+ 2270 : print"{up}"tab(35)l
+ 2280 : if ss<>0then2360
+ 2290 : dl=d*16+l
+ 2300 : fl=0
+ 2310 : for i=0to55
+ 2320 :  if dl%(i)=dl then fl=1
+ 2330 : next
+ 2340 : if fl=0then 2410
+ 2350 :
+ 2360 l=l+1:ifl=8thenl=0:d=d+1
+ 2370 if d<8 then 2220
+ 2380 print"{up}no new drives found":gosub3130:close15:end
+ 2390 :
+ 2400 :
+ 2410 gosub3130
+ 2420 sc$="25 00 00 00 00 00 00 00 00 00"
+ 2430 gosub3240:ifss<>0thenprint"scsi error"ss:close15:end
+ 2440 :
+ 2450 print"{up}drive found: ";
+ 2460 print#15,"m-r"+chr$(al+1)+chr$(ah)+chr$(7)
+ 2470 get#15,a$,b$,c$,l1$,l2$,l3$,l4$
+ 2480 lh=asc(l2$+chr$(0)):lm=asc(l3$+chr$(0)):ll=asc(l4$+chr$(0))
+ 2490 le=(lh*65536+lm*256+ll)
+ 2500 :
+ 2510 ch=asc(a$+chr$(0)):cm=asc(b$+chr$(0)):cl=asc(c$+chr$(0))
+ 2520 cb=(ch*65536+cm*256+cl)
+ 2530 by=cb*le
+ 2540 :
+ 2550 cr=by/10000:wp=int(cr):dp=cr-wp:ifdp>=.5thenwp=wp+1
+ 2560 cr=wp/100
+ 2570 printcr"mb"
+ 2580 ifle<>512thenprint"error: incorrect block size":close15:end
+ 2590 :
+ 2600 input"add drive to system (y/n)";yn$
+ 2610 ifyn$="y"then 2650
+ 2620 ifyn$="Y"then 2650
+ 2630 close15:end
+ 2640 :
+ 2650 i=0
+ 2660 ifpeek(ha+i)=255then2700
+ 2670 i=i+1:ifi<55then2660
+ 2680 print"no room in drive table":close15:end
+ 2690 :
+ 2700 ifpeek(ha+i+1)<>255then2680
+ 2710 pokeha+i,dl
+ 2720 sh=peek(ha+i+56)
+ 2730 sm=peek(ha+i+112)
+ 2740 sl=peek(ha+i+168)
+ 2750 sb=(sh*65536)+(sm*256)+sl
+ 2760 nb=sb+cb+1
+ 2770 sh=int(nb/65536)
+ 2780 sm=int((nb-(sh*65536))/256)
+ 2790 sl=nb-(sh*65536)-(sm*256)
+ 2800 poke(ha+i+57),sh
+ 2810 poke(ha+i+113),sm
+ 2820 poke(ha+i+169),sl
+ 2830 :
+ 2840 print"{up}writing hardware block              "
+ 2850 gosub1290:print"{down}{down}{down}"
+ 2860 gosub2900
+ 2870 close15:end
+ 2880 :
+ 2890 :
+ 2900 poke 250,lb:poke251,hb
+ 2910 co=144
+ 2920 poke 186,td
+ 2930 for i=1 to bc
+ 2940 :
+ 2950 : for j=1 to 8
+ 2960 :  mw$="":fork=0to31:mw$=mw$+chr$(peek(ha+(j-1)*32+k)):next
+ 2970 :  print#15,"m-w"+chr$(tl+(j-1)*32)+chr$(th)+chr$(32)+mw$
+ 2980 : next j
+ 2990 : gosub 3140
+ 3000 : bl=bl+1:ifbl=256thenbl=0:bh=bh+1
+ 3010 next i
+ 3020 return
+ 3030 :
+ 3040 :
+ 3050 :
+ 3060 co=128
+ 3070 poke 186,td
+ 3080 gosub 3140
+ 3090 print#15,"m-r"+chr$(tl)+chr$(th)+chr$(0)
+ 3100 fori=0to255:get#15,a$:poke(ha+i),asc(a$+chr$(0)):print".";:next
+ 3110 return
+ 3120 :
+ 3130 co=130
+ 3140 ec=2
+ 3150 print#15,"m-w"+chr$(08)chr$(00)chr$(2)chr$(bh)chr$(bl)
+ 3160 print#15,"m-w"+chr$(00)chr$(00)chr$(1)chr$(co)
+ 3170 print#15,"m-r"+chr$(00)chr$(00)chr$(1)
+ 3180 get#15,a$:ifa$=""thena$=chr$(0)
+ 3190 ifa$>chr$(127)then 3170
+ 3200 ifa$<chr$(2)  then return
+ 3210 ec=ec-1:ifec>0then 3160
+ 3220 print"disk error"asc(a$)"{left}                 ":close15:end
+ 3230 :
+ 3240 gosub3330
+ 3250 ah=int(sb/256):al=sb-ah*256
+ 3260 gosub3280:ifss=2 then gosub3280
+ 3270 return
+ 3280 print#15,"s-c"+chr$(sd)+chr$(al)+chr$(ah)+ss$
+ 3290 get#15,sa$,sb$:ss=asc(sa$+chr$(0))
+ 3300 return
+ 3310 :
+ 3320 :
+ 3330 ss$=""
+ 3340 for i=1 to len(sc$) step3
+ 3350 : hv%=asc(mid$(sc$,i,1))-55:ifhv%<10thenhv%=hv%+7
+ 3360 hv%=hv%*16
+ 3370 : hl%=asc(mid$(sc$,i+1,1))-55:ifhl%<10thenhl%=hl%+7
+ 3380 : if i=4 then hv%=(hv%and31)or(sl*32)
+ 3390 : ss$=ss$+chr$(hv%+hl%)
+ 3400 next
+ 3410 return
+ 3420 print"{clr}"
+ 3430 print"{cyn}            add drive "vn$
+ 3440 print"{down}{wht}   before continuing you should place"
+ 3450 print"    your hd into configuration mode."
+ 3460 print"{down}   1. press and hold down the write"
+ 3470 print"      protect switch."
+ 3480 print"{down}   2. while holding down the write"
+ 3490 print"      protect switch, press the reset"
+ 3500 print"      switch once and release it."
+ 3510 print"{down}   3. continue to hold down the write"
+ 3520 print"      protect switch until the"
+ 3530 print"      activity led's stay off."
+ 3540 print"{down}   4. release the write protect"
+ 3550 print"      switch. if the write protect"
+ 3560 print"      led is lit, press and release"
+ 3570 print"      the write protect switch again."
+ 3580 print"{down}      press return to continue..."
+ 3590 getk$:ifk$<>chr$(13)then3590
+ 3600 return
+ 3610 :
+ 3620 print"{clr}{down}"
+ 3630 print"{rvon}warning{rvof}: removing a drive from the"
+ 3640 print"hd system configuration does not"
+ 3650 print"automatically correct the partition"
+ 3660 print"table to reflect the loss of storage"
+ 3670 print"space."
+ 3680 print
+ 3690 print"any partitions currently existing on"
+ 3700 print"the removed drive and any following"
+ 3710 print"add-on drives will no longer be valid"
+ 3720 print"once the drive is removed by this"
+ 3730 print"program."
+ 3740 print
+ 3750 print"before continuing, you should back up"
+ 3760 print"any valuable data and then remove any"
+ 3770 print"partitions currently existing on the"
+ 3780 print"above-mentioned drive(s).
+ 3790 print
+ 3800 print"note: any partitions and data on the"
+ 3810 print"system (first) drive are safe and will"
+ 3820 print"not be altered."
+ 3830 print
+ 3840 input"continue (y/n)";yn$
+ 3860 ifyn$="y"thenreturn
+ 3870 close15:end

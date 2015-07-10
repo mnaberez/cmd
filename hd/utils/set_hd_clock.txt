@@ -1,0 +1,90 @@
+;set_hd_clock.prg ==1c01==
+    0 rem  set real-time clock by doug cotton      (c) 1990 by creative micro designs, inc.
+    1 poke53280,0:poke53281,0:poke650,128:print"{clr}":dimwd$(6)
+    2 wd$(0)="sun.":wd$(1)="mon."
+    3 wd$(2)="tue.":wd$(3)="wed."
+    4 wd$(4)="thu.":wd$(5)="fri."
+    5 wd$(6)="sat."
+    6 input"cmd device number";dv
+   10 open15,dv,15
+   20 print#15,"t-rd"
+   30 get#15,wd$:wd=asc(wd$+chr$(0))
+   31 get#15,yr$:yr=asc(yr$+chr$(0))
+   32 get#15,mo$:mo=asc(mo$+chr$(0))
+   33 get#15,da$:da=asc(da$+chr$(0))
+   34 get#15,hr$:hr=asc(hr$+chr$(0))
+   35 get#15,mn$:mn=asc(mn$+chr$(0))
+   36 get#15,se$:se=asc(se$+chr$(0))
+   37 get#15,ap$:ap=asc(ap$+chr$(0))
+   40 close15
+   41 ifwd$<>"3"then50
+   42 print:print"sorry..."
+   43 print"real time clock option not installed":end
+   50 gosub1100
+  100 print"{clr}{down}{down}         {wht}set real-time clock v1.10"
+  110 print"{down}{down}{down}{down}{down}  {cyn}U{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}I"
+  120 print"  {cyn}]                                  ]"
+  130 print"  {cyn}]        {wht}date           clock      {cyn}]"
+  140 print"  {cyn}]  U{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}I  U{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}I  ]"
+  150 print"  {cyn}]  ]             ]  ]           ]  ]"
+  160 print"  {cyn}]  J{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}K  J{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}K  ]"
+  170 print"  {cyn}]                                  ]"
+  180 print"  {cyn}J{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}{SHIFT-*}K"
+  185 printtab(9);"{down}{down}{down}{down}{down}{down}{wht}use <+> or <-> to adjust"
+  190 printtab(9);" and <return> to accept"
+  200 gosub1000
+  210 f=1:v=wd:ll=0:ul=6:gosub2000
+  300 f=2:v=mo:ll=1:ul=12:gosub2000
+  400 f=3:v=da:ll=1:ul=31
+  410 ifmo=4ormo=6ormo=9ormo=11thenul=30
+  420 ifmo=2thenul=29
+  430 gosub2000
+  500 f=4:v=yr:ll=0:ul=99:gosub2000
+  600 f=5:v=hr:ll=1:ul=12:gosub2000
+  700 f=6:v=mn:ll=0:ul=59:gosub2000
+  800 f=7:v=se:ll=0:ul=59:gosub2000
+  900 f=8:v=ap:ll=0:ul=1:gosub2000
+  905 open15,dv,15
+  906 td$="t-wa"+wd$+" "+mo$+"/"+da$+"/"+yr$+" "+hr$+":"+mn$+":"+se$+" "+ap$
+  910 print"{home}{down}{down}{down}{down}{down}{down}{down}{down}{down}{down}{down}{down}{down}{down}{down}{down}{down}{down}{down}{down}{down}{down}{wht}          press <return> to set  "
+  920 printtab(9);" or <space> to change  "
+  930 getk$:ifk$<>" "andk$<>chr$(13)thengoto930
+  940 ifk$=chr$(13)thenprint#15,td$:close15:print"{clr}":poke650,0:end
+  950 close15:goto 100
+  999 end
+ 1000 print"{home}{down}{down}{down}{down}{down}{down}{down}{down}{down}{down}{down}{down}";
+ 1010 print"{wht}{rght}{rght}{rght}{rght}{rght}{rght}";:iff=1thenprint"{rvon}";
+ 1012 printwd$;"{rvof} ";:iff=2thenprint"{rvon}";
+ 1014 printmo$;"{rvof}/";:iff=3thenprint"{rvon}";
+ 1016 printda$;"{rvof}/";:iff=4thenprint"{rvon}";
+ 1018 printyr$;"{rvof}{rght}{rght}{rght}{rght}";:iff=5thenprint"{rvon}";
+ 1020 printhr$;"{rvof}:";:iff=6thenprint"{rvon}";
+ 1022 printmn$;"{rvof}:";:iff=7thenprint"{rvon}";
+ 1024 printse$;"{rvof} ";:iff=8thenprint"{rvon}";
+ 1026 printap$;"{rvof}"
+ 1030 return
+ 1100 yr$=right$("0"+right$(str$(yr),len(str$(yr))-1),2)
+ 1110 wd$=wd$(wd)
+ 1120 mo$=right$("0"+right$(str$(mo),len(str$(mo))-1),2)
+ 1130 da$=right$("0"+right$(str$(da),len(str$(da))-1),2)
+ 1140 hr$=right$("0"+right$(str$(hr),len(str$(hr))-1),2)
+ 1150 mn$=right$("0"+right$(str$(mn),len(str$(mn))-1),2)
+ 1160 se$=right$("0"+right$(str$(se),len(str$(se))-1),2)
+ 1170 ap$="pm":ifap=0thenap$="am"
+ 1180 return
+ 1200 onfgoto1210,1220,1230,1240,1250,1260,1270,1280
+ 1205 return
+ 1210 wd=v:return
+ 1220 mo=v:return
+ 1230 da=v:return
+ 1240 yr=v:return
+ 1250 hr=v:return
+ 1260 mn=v:return
+ 1270 se=v:return
+ 1280 ap=v:return
+ 2000 gosub1200:gosub1100:gosub1000
+ 2010 getk$:ifk$<>"+"andk$<>"-"andk$<>chr$(13)thengoto2010
+ 2020 ifk$="+"thenv=v+1:ifv>ulthenv=ll
+ 2030 ifk$="-"thenv=v-1:ifv<llthenv=ul
+ 2040 ifk$=chr$(13)thenreturn
+ 2050 goto2000

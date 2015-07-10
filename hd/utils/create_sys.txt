@@ -1,0 +1,144 @@
+;create_sys.prg ==1c01==
+ 1000 f=abs(peek(65533)=255)
+ 1010 iff=0thenclr:poke51,00:poke55,00:poke52,32:poke56,32:f=0
+ 1020 dl=peek(186):poke250,f
+ 1030 iff=0thenml=peek(46)*256+peek(45)-147
+ 1040 iff=1thenml=peek(4625)*256+peek(4624)-147
+ 1050 ta=2*4096:iff=1thenta=4*4096:bank15
+ 1060 ifpeek(57513)=120then@p0
+ 1070 :
+ 1080 print"{clr}{down}create sys v1.12"
+ 1090 print"{down}this program creates a new system"
+ 1100 print"area on your hd."
+ 1110 print"{down}warning: continuing will cause any data"
+ 1120 print"and partitions on the hd to be lost!!"
+ 1130 print"{down}important: this program must be run"
+ 1140 print"from a floppy disk that contains the"
+ 1150 print"files 'rewrite dos', 'system header',"
+ 1160 print"'hdos v?.??' and 'geos/hd ?.??'."
+ 1170 print"{down}remember: after running this program,"
+ 1180 print"you will have to use hd-tools to create"
+ 1190 print"new partitions."
+ 1200 print"{down}to begin, hold down 'swap 8' & 'swap 9'"
+ 1210 print"while you press and release 'reset'."
+ 1220 print"{down}press <return> to create the new system"
+ 1230 print
+ 1240 geta$:ifa$<>chr$(13)then1240
+ 1250 :
+ 1260 so=3
+ 1270 dv=30:sd=0:sl=0:sb=16384
+ 1280 sc$="25 00 00 00 00 00 00 00 00 00"
+ 1290 gosub2020
+ 1300 ifss<>0thenprint"scsi error"ss:end
+ 1310 open15,dv,15,"m-r"+chr$(bl+1)+chr$(bh)+chr$(3)
+ 1320 get#15,a$,b$,c$:ch=asc(a$+chr$(0)):cm=asc(b$+chr$(0)):cl=asc(c$+chr$(0))
+ 1330 close15:tb=ch*65536+cm*256+cl
+ 1340 :
+ 1350 print"{clr}total storage ="tb"blocks
+ 1360 print"              ="tb*512"bytes
+ 1370 :
+ 1371 print:print"system starting block ="so*128
+ 1372 print" use{rght}+ or - to change, return to accept."
+ 1373 print" (note: default is normally 384)
+ 1374 getk$:ifk$=""thengoto1374
+ 1375 ifk$="+"thenso=so+1:if(so=256)or(so*128>tb-2048)thenso=0
+ 1376 ifk$="-"thenso=so-1:ifso<0thenso=0
+ 1377 ifk$=chr$(13)thengoto1380
+ 1378 goto1350
+ 1379 :
+ 1380 le=tb+1
+ 1390 lh=int(le/65536)
+ 1400 lm=int((le-lh*65536)/256)
+ 1410 ll=le-lh*65536-lm*256
+ 1420 :
+ 1421 ifso=0thengoto1450
+ 1422 print"{down}clear area below system if not"
+ 1423 print"sharing hd with other computer types."
+ 1424 print"{down}clear area below system? ";
+ 1425 getk$:ifk$<>"y"andk$<>"n"thengoto1425
+ 1426 printk$:ifk$="n"thengoto1450
+ 1427 print:print"clearing area below system"
+ 1429 :
+ 1430 fori=0to255:poketa+i,0:next
+ 1440 for bh=0toso-1:gosub1760:next
+ 1450 print:print"creating device table"
+ 1460 :
+ 1470 i$=chr$(0)+chr$(0)+chr$(0)+chr$(0)+chr$(0)+chr$(128)+chr$(1)+chr$(0)
+ 1480 i$=i$+chr$(0)+chr$(0)+chr$(0)+chr$(0)+chr$(0)+chr$(0)+chr$(0)+chr$(0)
+ 1490 i$=i$+"cmd hd  "+chr$(141)+chr$(3)+chr$(136)+chr$(142)
+ 1500 i$=i$+chr$(2)+chr$(136)+chr$(234)+chr$(96)
+ 1510 fori=0to223:poketa+i,255:next
+ 1520 fori=0to3:poketa+(i*56),0:next
+ 1530 fori=0to31:poketa+i+224,asc(mid$(i$,i+1,1)):next
+ 1540 poketa+57,lh:poketa+113,lm:poketa+169,ll
+ 1550 dn=12:dp=1
+ 1560 poketa+225,dn:poketa+228,dn
+ 1570 poketa+226,dp:poketa+227,dp
+ 1580 :
+ 1590 print"writing device table"
+ 1600 bh=so:gosub1760
+ 1610 :
+ 1620 open15,30,15:print#15,"p-h"
+ 1630 print#15,"p-n"
+ 1640 print:print"writing partition table"
+ 1650 :
+ 1660 pn=000:pt=255:sh=000:sm=000:sl=144
+ 1670 oh=000:om=int((so*256/2)/256):ol=so*256/2-om*256
+ 1680 pn$="system":gosub 2190
+ 1690 :
+ 1700 print#15,"p-u"
+ 1710 close15
+ 1720 cs=1
+ 1730 load"rewrite dos",dl
+ 1740 :
+ 1750 :
+ 1760 lb=00:hb=ta/256:bl=5:bc=1
+ 1770 poke 251,lb: poke 252,hb:print
+ 1780 co=144
+ 1790 poke 186,dv
+ 1800 for i=1 to bc
+ 1810 for j=1 to 8
+ 1820 sys ml+3
+ 1830 next j
+ 1840 :
+ 1850 gosub 1910
+ 1860 bl=bl+1:ifbl=256thenbl=0:bh=bh+1
+ 1870 :
+ 1880 next i
+ 1890 return
+ 1900 :
+ 1910 ec=04
+ 1920 open15,dv,15,"m-w"+chr$(08)+chr$(00)+chr$(2)+chr$(bh)+chr$(bl)
+ 1930 print#15,"m-w"+chr$(00)chr$(00)chr$(1)chr$(co)
+ 1940 print#15,"m-r"+chr$(00)chr$(00)chr$(1)
+ 1950 get#15,a$:ifa$=""thena$=chr$(0)
+ 1960 ifa$>chr$(127)then 1940
+ 1970 ifa$<chr$(2)  then close15:return
+ 1980 ec=ec-1:ifec>0then 1930
+ 1990 print"write error"asc(a$):close15:end
+ 2000 :
+ 2010 :
+ 2020 gosub2110
+ 2030 bh=int(sb/256):bl=sb-bh*256
+ 2040 gosub2060:ifss<>0thengosub2060
+ 2050 return
+ 2060 open15,dv,15,"s-c"+chr$(sd)+chr$(bl)+chr$(bh)+ss$
+ 2070 get#15,sa$,sb$:ss=asc(sa$+chr$(0))
+ 2080 close15:return
+ 2090 :
+ 2100 :
+ 2110 ss$=""
+ 2120 for i=1 to len(sc$) step3
+ 2130 hv%=asc(mid$(sc$,i,1))-55:ifhv%<10thenhv%=hv%+7:hv%=hv%*16
+ 2140 hl%=asc(mid$(sc$,i+1,1))-55:ifhl%<10thenhl%=hl%+7
+ 2150 ss$=ss$+chr$(hv%+hl%)
+ 2160 next:return
+ 2170 :
+ 2180 :
+ 2190 iflen(pn$)=16then2220
+ 2200 for i=len(pn$)to 15
+ 2210 pn$=pn$+chr$(160):next
+ 2220 pp$=chr$(pt)+chr$(0)+chr$(0)+pn$+chr$(oh)+chr$(om)+chr$(ol)
+ 2230 pp$=pp$+chr$(0)+chr$(0)+chr$(0)+chr$(0)+chr$(0)+chr$(sh)+chr$(sm)+chr$(sl)
+ 2240 print#15,"p-p"+chr$(pn)+pp$
+ 2250 print#15,"p-w":return

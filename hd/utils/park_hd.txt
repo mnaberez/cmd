@@ -1,0 +1,23 @@
+;park_hd.prg ==1c01==
+  100 print"{down}cmd hd park utility v1.10"
+  110 input"{down}hd device number";dev
+  120 ifdev<8ordev>30thenprint:print"sorry, illegal device number":end
+  130 open15,dev,15:close15
+  140 ifst<>0thenprint:print"sorry, device not present":end
+  150 open15,dev,15,"m-r"+chr$(160)+chr$(254)+chr$(6)
+  160 fori=1to6:get#15,a$:a$=chr$(asc(a$+chr$(0))):i$=i$+a$:next
+  170 close15
+  180 ifi$="cmd hd"then210
+  190 print:print"sorry,{$a0}device is not an hd":end
+  200 :
+  210 print:print"parking hd, please wait..."
+  220 open15,dev,15,"m-w"+chr$(32)+chr$(0)+chr$(1)+chr$(250)
+  230 print#15,"m-r"+chr$(32)+chr$(0)+chr$(1)
+  240 get#15,a$:close15
+  250 print:print"drive is parked."
+  260 print"it can now be shut off and moved safely."
+  270 print"press <return> to finish"
+  280 print"press 'u' to un-park"
+  290 geta$:ifa$=""then290
+  300 ifa$<>"u"then end
+  310 open15,dev,15,"m-w"+chr$(32)+chr$(0)+chr$(1)+chr$(248):close15:end

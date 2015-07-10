@@ -1,0 +1,238 @@
+;llformat.prg ==1c01==
+  100 rem llformat v2.00 (c)1989 c.m.d.
+  101 vn$="v2.01 12/19/94"
+  102 f=abs(peek(65533)=255)
+  110 poke53280,0:poke53281,0
+  112 iff=1thenbank15
+  120 gosub 2890
+  140 :
+  150 dim dl%(56),d%(56),l%(56),rs(27)
+  160 h$="0123456789abcdef"
+  170 :
+  172 td=30
+  174 iff=0thenha=52736
+  180 iff=1then ha=dec("1900")
+  190 :
+  200 :
+  210 open15,td,15,"m-r"+chr$(160)+chr$(254)+chr$(6)
+  220 fori=1to6:get#15,a$:id$=id$+a$:next
+  230 ifid$<>"cmd hd"then print"hd not present":goto 2840
+  240 :
+  270 :
+  460 print"{clr}{down}scanning for scsi drives:      dev lun"
+  470 print"                               {CBM-T}{CBM-T}{CBM-T} {CBM-T}{CBM-T}{CBM-T}":print
+  472 fori=0to255:pokeha+i,255:next
+  480 gosub2200
+  490 d=0:l=0:hi=0
+  500 :
+  510 : dv=td:sd=d:sl=l:sb=16384
+  520 : sc$="00 00 00 00 00 00"
+  530 : gosub2310
+  540 : print"{up}"tab(31)d tab(35)"  "
+  550 : if ss=133thenl=7:goto650
+  560 : print"{up}"tab(35)l
+  570 : if ss<>0then650
+  580 : dl=d*16+l
+  590 : pokeha+hi,dl:hi=hi+1
+  600 :
+  650 l=l+1:ifl=8thenl=0:d=d+1
+  660 if d<8 then 510
+  700 gosub2200
+  710 :
+ 1000 print"{clr}{down}    currently recognized scsi drives":print
+ 1010 print"{down} dev lun   dev lun   dev lun   dev lun"
+ 1020 print" {CBM-T}{CBM-T}{CBM-T} {CBM-T}{CBM-T}{CBM-T}   {CBM-T}{CBM-T}{CBM-T} {CBM-T}{CBM-T}{CBM-T}   {CBM-T}{CBM-T}{CBM-T} {CBM-T}{CBM-T}{CBM-T}   {CBM-T}{CBM-T}{CBM-T} {CBM-T}{CBM-T}{CBM-T}"
+ 1030 :
+ 1040 gosub1060:goto1190
+ 1050 :
+ 1060 t1=1:t2=5:ct=1:fori=1to56:d%(i)=255:l%(i)=255:next
+ 1070 forc=0to3
+ 1080 :print"{home}{down}{down}{down}{down}{down}{down}";
+ 1090 :for i=c*14 to c*14+13
+ 1100 : dl=peek(ha+i):if dl=255 then print      tab(t1+c*10)" -   -":goto1140
+ 1110 : d=(dl and 240)/16
+ 1120 : l=(dl and 15):d%(ct)=d:l%(ct)=l:ct=ct+1
+ 1130 : printtab(t1+c*10)d;tab(t2+c*10)l
+ 1140 : dl%(i)=dl
+ 1150 :next i
+ 1160 next c
+ 1170 return
+ 1180 :
+ 1190 p=1
+ 1200 print"{down}  use the cursor keys to select drive  "
+ 1210 print"  to format - press return to continue "
+ 1220 xp$="{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}{rght}":yp$="{down}{down}{down}{down}{down}{down}{down}{down}{down}{down}{down}{down}{down}{down}"
+ 1230 xp=int((p-1)/14):yp=p-(xp*14):xp=xp*10+8
+ 1240 print"{home}{down}{down}{down}{down}{down}";
+ 1250 printleft$(xp$,xp);
+ 1260 printleft$(yp$,yp);
+ 1270 print"_";
+ 1280 getk$:ifk$<>chr$(13)andk$<>"{down}"andk$<>"{up}"andk$<>"{left}"andk$<>"{rght}"then1280
+ 1290 ifk$="{down}"andp<56thenifd%(p+1)<>255thenp=p+1
+ 1300 ifk$="{up}"andp>1thenifd%(p-1)<>255thenp=p-1
+ 1310 ifk$="{rght}"andp<43thenifd%(p+14)<>255thenp=p+14
+ 1320 ifk$="{left}"andp>14thenifd%(p-14)<>255thenp=p-14
+ 1330 ifk$=chr$(13)thend=d%(p):l=l%(p):goto1360
+ 1340 print"{left} ";:rem d & l
+ 1350 goto1230
+ 1360 gosub2200
+ 1370 :
+ 1380 print"{home}{down}{down}{down}{down}{down}{down}{down}{down}{down}{down}{down}{down}{down}{down}{down}{down}{down}{down}{down}{down}{down}";
+ 1390 : dl=d*16+l
+ 1400 : for i=0to55
+ 1410 :  if dl%(i)=dl then fl=1
+ 1420 : next
+ 1430 : if fl=0then print"{clr}{rvon}error:{rvof} specified dev/lun not present!":goto 2840
+ 1440 :
+ 1450 : dv=td:sd=d:sl=l:sb=16384
+ 1460 : sc$="00 00 00 00 00 00"
+ 1470 : gosub2310:ifss=2thengosub2310
+ 1480 : ifss<>0thenprint"{clr}{rvon}error:{rvof} scsi drive not ready!":goto 2840
+ 1490 :
+ 1500 print"{rvon}warning:{rvof} formatting will destroy      "
+ 1510 print"all data on the specified drive.       "
+ 1520 input"continue (y/n)";yn$
+ 1530 ifyn$="y"then1550
+ 1540 ifyn$<>"Y"then2840
+ 1550 print"{up}{up}{up}                                       "
+ 1560 print"format scsi dev"d"{left} lun"l"{left}            "
+ 1570 input"are you sure (y/n)";yn$
+ 1580 ifyn$="y"then1610
+ 1590 ifyn$<>"Y"then2840
+ 1600 :
+ 1610 print"{up}{up}{up}{rvon}formatting...{rvof} please wait              "
+ 1620 print"                                       "
+ 1630 print"                                       "
+ 1640 print"                                       ":print"{up}{up}{up}";
+ 1650 :
+ 1660 print#15,"m-w"+chr$(al)+chr$(ah)+chr$(4)+chr$(0)+chr$(0)+chr$(0)+chr$(0)
+ 1670 sc$="04 18 00 00 01 00"
+ 1680 gosub2510
+ 1690 if ss<>0then 2830
+ 1700 :
+ 1710 print"{clr}format complete."
+ 1720 :
+ 1722 gosub2200
+ 1730 sc$="25 00 00 00 00 00 00 00 00 00"
+ 1740 gosub2510:ifss<>0then 2830
+ 1750 print#15,"m-r"+chr$(al+1)+chr$(ah)+chr$(3)
+ 1760 get#15,bh$,bm$,bl$
+ 1770 nb=asc(bh$+chr$(0))*65536+asc(bm$+chr$(0))*256+asc(bl$+chr$(0))+1
+ 1780 :
+ 1790 :
+ 1800 print"verifying format - please wait":print
+ 1810 print"bad blocks: 0      remapped: 0"
+ 1820 bc=nb:bf=0:br=0:of=0
+ 1830 vl=65535
+ 1840 if vl>bc then vl=bc
+ 1850 : sc$="2f 00 00"
+ 1860 : gosub2400
+ 1870 : bn=of:gosub2780
+ 1880 : ss$=ss$+chr$(bh)+chr$(bm)+chr$(bl)+chr$(0)
+ 1890 : bn=vl:gosub2780
+ 1900 : ss$=ss$+chr$(bm)+chr$(bl)+chr$(0)
+ 1910 : gosub2320:gosub2520
+ 1920 : if ss=0 then 2060
+ 1930 :  bb=rs(4)*65536+rs(5)*256+rs(6)
+ 1940 :  if(rs(2)and15)=1then 1960
+ 1942 :  if((rs(2)and15)=9)and(rs(12)=128)then2040
+ 1950 :  if(rs(2)and15)<>3then 2830
+ 1960 :  dl$=chr$(0)+chr$(0)+chr$(0)+chr$(4)
+ 1970 :  dl$=dl$+chr$(rs(3))+chr$(rs(4))+chr$(rs(5))+chr$(rs(6))
+ 1980 :  gosub2660:bf=bf+1:print"{up}{up}"tab(11)bf:print"{up}";
+ 1990 :  print#15,"m-w"+chr$(al)+chr$(ah)+chr$(8)+dl$
+ 2000 :  sc$="07 00 00 00 00 00"
+ 2010 :  gosub 2510:ifss<>0then 2830
+ 2020 :  br=br+1:printtab(28)br:print"                                       "
+ 2030 :  print"{up}";
+ 2040 :  bc=bc-(bb-of):of=bb:goto 1830
+ 2050 :
+ 2060 : bc=bc-vl:of=of+vl
+ 2070 if bc>0 then 1830
+ 2080 print"{down}{down}{down}{down}{down}format successful                      ":print:goto2840
+ 2090 :
+ 2100 :
+ 2200 co=130
+ 2210 ec=2
+ 2220 print#15,"m-w"+chr$(08)chr$(00)chr$(2)chr$(bh)chr$(bl)
+ 2230 print#15,"m-w"+chr$(00)chr$(00)chr$(1)chr$(co)
+ 2240 print#15,"m-r"+chr$(00)chr$(00)chr$(1)
+ 2250 get#15,a$:ifa$=""thena$=chr$(0)
+ 2260 ifa$>chr$(127)then 2240
+ 2270 ifa$<chr$(2)  then return
+ 2280 ec=ec-1:ifec>0then 2230
+ 2290 print"disk error"asc(a$)"{left}                 ":goto 2840
+ 2300 :
+ 2310 gosub2400
+ 2320 ah=int(sb/256):al=sb-ah*256
+ 2330 gosub2350:ifss=2 then gosub2350
+ 2340 return
+ 2350 print#15,"s-c"+chr$(sd)+chr$(al)+chr$(ah)+ss$
+ 2360 get#15,sa$,sb$:ss=asc(sa$+chr$(0))
+ 2370 return
+ 2380 :
+ 2390 :
+ 2400 ss$=""
+ 2410 for i=1 to len(sc$) step3
+ 2420 : hv%=asc(mid$(sc$,i,1))-55:ifhv%<10thenhv%=hv%+7
+ 2430 hv%=hv%*16
+ 2440 : hl%=asc(mid$(sc$,i+1,1))-55:ifhl%<10thenhl%=hl%+7
+ 2450 : if i=4 then hv%=(hv%and31)or(sl*32)
+ 2460 : ss$=ss$+chr$(hv%+hl%)
+ 2470 next
+ 2480 return
+ 2490 :
+ 2500 :
+ 2510 gosub2310
+ 2520 ifss=0 then return
+ 2530 sc$="03 00 00 00 1b 00"
+ 2540 gosub2310
+ 2550 print#15,"m-r"+chr$(al)+chr$(ah)+chr$(27)
+ 2560 fori=0to27:get#15,a$:rs(i)=asc(a$+chr$(0)):next
+ 2570 ss=2:return
+ 2580 :
+ 2590 :
+ 2600 :
+ 2610 ec=rs(0) :gosub2730:ec$=eh$
+ 2620 ec=rs(2) :gosub2730:ek$=eh$
+ 2630 ec=rs(12):gosub2730:es$=eh$
+ 2640 print"scsi error: "ec$" "ek$" "es$
+ 2650 if rs(0)<127 then 2710
+ 2660 eb$=""
+ 2670 fori=3to6
+ 2680 ec=rs(i):gosub2730:eb$=eb$+eh$
+ 2690 next
+ 2700 print"block address: "eb$
+ 2710 return
+ 2720 :
+ 2730 eh=int(ec/16)
+ 2740 ez=ec-(eh*16)
+ 2750 eh$=mid$(h$,eh+1,1)+mid$(h$,ez+1,1)
+ 2760 return
+ 2770 :
+ 2780 bh=int(bn/65536)
+ 2790 bm=int((bn-(bh*65536))/256)
+ 2800 bl=bn-(bh*65536+bm*256)
+ 2810 return
+ 2820 :
+ 2830 gosub 2610
+ 2840 close 15
+ 2870 end
+ 2880 :
+ 2890 print"{clr}"
+ 2900 print"{cyn}         llformat "vn$
+ 2910 print"{down}{wht}   before continuing you should place"
+ 2920 print"    your hd into installation mode."
+ 2930 print"{down}   1. press and hold down the swap 8"
+ 2940 print"      and swap 9 switches."
+ 2950 print"{down}   2. while holding down the swap 8 and"
+ 2960 print"      swap 9 switches, press the reset"
+ 2970 print"      switch once and release it."
+ 2980 print"{down}   3. continue to hold down the swap 8"
+ 2990 print"      and swap 9 switches until the"
+ 3000 print"      activity led's stay off."
+ 3010 print"{down}   4. release the swap 8 and swap 9
+ 3020 print"      switches.
+ 3030 print"{down}      press <return> to continue"
+ 3040 getk$:ifk$<>chr$(13)then3040
+ 3050 return

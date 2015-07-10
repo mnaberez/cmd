@@ -1,0 +1,48 @@
+;partition_info.prg ==0801==
+   10 rem partition info v1.01 06/25/91
+   20 print"{clr}"
+   30 input"hd device number";dv
+   32 ifdv<8ordv>29thenrun
+   40 print"output to printer? (y/n) ";
+   42 getk$:ifk$=""thengoto42
+   44 printk$:ifk$<>"y"thengoto60
+   50 input"printer device number";pd
+   52 openpd,pd,0
+   60 open15,dv,15
+   70 print"{clr}";
+  100 fori=0to254
+  110 print#15,"g-p"+chr$(i)
+  120 get#15,pt$:pt=asc(pt$+chr$(0)):ifpt=0thengoto400
+  122 get#15,x1$,pn$
+  130 na$="":forj=1to16
+  140 get#15,n$
+  150 na$=na$+n$
+  160 next
+  170 get#15,ah$,am$,al$,x2$,x3$,x4$,x5$,x6$,sh$,sm$,sl$,x7$
+  190 pn=asc(pn$+chr$(0))
+  200 ah=asc(ah$+chr$(0))
+  210 am=asc(am$+chr$(0))
+  220 al=asc(al$+chr$(0))
+  230 sh=asc(sh$+chr$(0))
+  240 sm=asc(sm$+chr$(0))
+  250 sl=asc(sl$+chr$(0))
+  260 sb=al+(am*256)+(ah*(256^2))
+  270 sa=sb*512
+  280 sz=(sl+(sm*256)+(sh*(256^2)))*512
+  300 print"partition number :";pn
+  302 ifpd>0thenprint#pd,"partition number :";pn
+  310 print"partition name   : ";na$
+  312 ifpd>0thenprint#pd,"partition name   : ";na$
+  320 print"partition type   :";pt
+  322 ifpd>0thenprint#pd,"partition type   :";pt
+  330 print"starting block   :";sb
+  332 ifpd>0thenprint#pd,"starting block   :";sb;
+  340 print"starting address :";sa
+  342 ifpd>0thenprint#pd,"starting address :";sa
+  350 print"partition size   :";sz;"bytes"
+  352 ifpd>0thenprint#pd,"partition size   :";sz;"bytes"
+  360 print
+  362 ifpd>0thenprint#pd
+  400 next
+  410 ifpd>0thenclosepd
+  420 close15

@@ -1,0 +1,141 @@
+;fix-hd-size.prg ==1c01==
+  120 print"{clr}":print
+  130 :
+  140 print"hold down 'write protect',"
+  150 print"and press 'reset'...":print
+  152 print"release 'reset' and wait"
+  154 print"for the activity lights"
+  156 print"to stop, then release"
+  158 print"'write protect'.":print
+  160 print"make sure write protect is clear,"
+  170 print"then press <return> to continue"
+  180 geta$:ifa$<>chr$(13)then180:ld=dv
+  190 :
+
+;dv=30 iec device number when hd is in configuration mode
+;sd=0 scsi device number
+;sb=16384 ($4000) is a location in hd 8k ram area $3000-4fff
+  200 dv=30:sd=0:sl=0:sb=16384
+  210 :
+
+;send scsi command $25 = read capacity(10)
+  270 sc$="25 00 00 00 00 00 00 00 00 00"
+  280 gosub920
+
+;print error and exit if scsi command failed
+  290 ifss<>0then1090
+
+;read 4 bytes from hd ram into variables h$,a$,b$,c$
+  300 open15,dv,15,"m-r"+chr$(bl+0)+chr$(bh)+chr$(4)
+  310 get#15,h$,a$,b$,c$
+  311 cz=asc(h$+chr$(0)):ch=asc(a$+chr$(0)):cm=asc(b$+chr$(0)):cl=asc(c$+chr$(0))
+  320 close15:tb=cz*16777216+ch*65536+cm*256+cl
+  330 :
+
+;tb is the total size of the drive in 512-byte blocks
+  340 print:print"drive size     ="tb"blocks
+  350 print"               ="tb*512"bytes
+  352 mb=(tb/2048)+.05:mb=int(mb*10):mb=mb/10
+  355 print"               ="mb"mb
+  356 gb=(tb/2097152)+.005:gb=int(gb*100):gb=gb/100
+  357 print"               ="gb"gb
+  360 :
+
+;location 186 ($ba) is device number of current file
+;bl = low byte of scsi data buffer in hd ram
+;bh = high byte of scsi data buffer in hd ram
+  400 bh=0:bl=5:poke186,dv:open15,dv,15
+  410 gosub 1400
+
+;lh = contents of hd ram $0339 (block count high)
+  415 print#15,"m-r"+chr$(57)chr$(3)chr$(0)
+  420 get#15,a$:a$=a$+chr$(0):lh=asc(a$)
+
+;lm = contents of hd ram $0371 (block count mid)
+  425 print#15,"m-r"+chr$(113)chr$(3)chr$(0)
+  430 get#15,a$:a$=a$+chr$(0):lm=asc(a$)
+
+;ll = contents of hd ram $03a9 (block count low)
+  435 print#15,"m-r"+chr$(169)chr$(3)chr$(0)
+  440 get#15,a$:a$=a$+chr$(0):ll=asc(a$)
+
+;le is the configured size of the drive in 512-byte blocks
+  445 le=(lh*65536)+(lm*256)+ll:le=le-1
+  450 print:print"configured for ="le"blocks
+  455 print"               ="le*512"bytes
+  456 mb=(le/2048)+.05:mb=int(mb*10):mb=mb/10
+  457 print"               ="mb"mb
+  458 gb=(le/2097152)+.005:gb=int(gb*100):gb=gb/100
+  459 print"               ="gb"gb
+  460 print
+
+;tb of 8388608 blocks * 512 bytes/block = 4 gigabytes max size
+  465 if tb>8388608 then le=8388608
+  495 if le=tb then print"this drive is configured ok":close15:end
+
+  500 print"ok to update the new drive"
+  510 print"size to the hardware block? y/n"
+  520 geta$:ifa$=""then 520
+  530 ifa$<>"y"then 800
+  600 print:print"updating hardware block..."
+  610 gosub 1400
+  611 le=tb+1
+  612 lh=int(le/65536)
+  613 lm=int((le-lh*65536)/256)
+  614 ll=le-lh*65536-lm*256
+  620 print#15,"m-w"+chr$(57)chr$(3)chr$(1)chr$(lh)
+  630 print#15,"m-w"+chr$(113)chr$(3)chr$(1)chr$(lm)
+  640 print#15,"m-w"+chr$(169)chr$(3)chr$(1)chr$(ll)
+  650 gosub 1450
+  800 close15:print:print"press reset on hd..."
+  810 print"then hit return."
+  820 geta$:ifa$=""then 820
+  830 ifa$<>chr$(13)then 820
+  840 end
+  900 :
+  910 :
+
+;subroutine: send scsi command
+;dv=cmd hd iec device number
+;sd=scsi device number
+;sc$=command in hex text like "25 01 ff ab"
+;returns ss with scsi status code, 0=ok
+  920 gosub1010
+  930 bh=int(sb/256):bl=sb-bh*256
+  940 gosub960:ifss<>0thengosub960
+  950 return
+  960 open15,dv,15,"s-c"+chr$(sd)+chr$(bl)+chr$(bh)+ss$
+  970 get#15,sa$,sb$:ss=asc(sa$+chr$(0))
+  980 close15:return
+  990 :
+ 1000 :
+
+;subroutine: convert scsi command hex text in sc$ to bytes in ss$
+;input of sc$="01 ff 00" becomes ss$=chr$(1)+chr$(255)+chr$(0)
+ 1010 ss$=""
+ 1020 for i=1 to len(sc$) step3
+ 1030 hv%=asc(mid$(sc$,i,1))-55:ifhv%<10thenhv%=hv%+7:hv%=hv%*16
+ 1040 hl%=asc(mid$(sc$,i+1,1))-55:ifhl%<10thenhl%=hl%+7
+ 1050 ss$=ss$+chr$(hv%+hl%)
+ 1060 next:return
+ 1070 :
+ 1080 :
+
+;subroutine: print scsi error in ss and end program
+ 1090 print"scsi error"ss:end
+ 1399 :
+
+ 1400 print#15,"m-w"+chr$(8)chr$(0)chr$(2)chr$(bh)chr$(bl)
+ 1405 print#15,"m-w"+chr$(0)chr$(0)chr$(1)chr$(128)
+ 1410 gosub 1500
+ 1420 return
+ 1450 print#15,"m-w"+chr$(8)chr$(0)chr$(2)chr$(bh)chr$(bl)
+ 1455 print#15,"m-w"+chr$(0)chr$(0)chr$(1)chr$(144)
+ 1460 gosub 1500
+ 1470 return
+ 1490 :
+ 1500 print#15,"m-r"+chr$(0)+chr$(0)+chr$(1)
+ 1510 get#15,a$:a$=a$+chr$(0)
+ 1520 ifa$>chr$(127)then 1500
+ 1530 ifa$<chr$(2)  then return
+ 1540 print"access error"asc(a$):close15:end
