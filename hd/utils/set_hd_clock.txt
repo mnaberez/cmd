@@ -1,4 +1,11 @@
 ;set_hd_clock.prg ==1c01==
+;
+;2015-12-09
+;  Added an IF statement to end of line 30 to fix a crash.  After the battery
+;  was replaced in a CMD HD, the day of week returned a nonsensical value
+;  (variable WD) that was out of bounds of the WD$() array, which caused
+;  ?BAD SUBSCRIPT ERROR IN 1100.
+;
     0 rem  set real-time clock by doug cotton      (c) 1990 by creative micro designs, inc.
     1 poke53280,0:poke53281,0:poke650,128:print"{clr}":dimwd$(6)
     2 wd$(0)="sun.":wd$(1)="mon."
@@ -8,7 +15,7 @@
     6 input"cmd device number";dv
    10 open15,dv,15
    20 print#15,"t-rd"
-   30 get#15,wd$:wd=asc(wd$+chr$(0))
+   30 get#15,wd$:wd=asc(wd$+chr$(0)):ifwd>6thenwd=0
    31 get#15,yr$:yr=asc(yr$+chr$(0))
    32 get#15,mo$:mo=asc(mo$+chr$(0))
    33 get#15,da$:da=asc(da$+chr$(0))
